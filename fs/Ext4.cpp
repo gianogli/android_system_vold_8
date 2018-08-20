@@ -215,7 +215,7 @@ status_t Format(const std::string& source, unsigned long numSectors,
     cmd.push_back(source);
 
     if (numSectors) {
-        cmd.push_back(StringPrintf("%lu", numSectors * (4096 / 512)));
+        cmd.push_back(StringPrintf("%lu", numSectors * 512 / 4096));
     }
 
     return ForkExecvp(cmd);
