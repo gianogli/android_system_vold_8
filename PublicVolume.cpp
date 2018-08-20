@@ -65,10 +65,10 @@ PublicVolume::~PublicVolume() {
 }
 
 status_t PublicVolume::readMetadata() {
-    status_t res = ReadMetadataUntrusted(mDevPath, mFsType, mFsUuid, mFsLabel);
+    std::string unused;
+    status_t res = ReadMetadataUntrusted(mDevPath, mFsType, mFsUuid, unused);
     notifyEvent(ResponseCode::VolumeFsTypeChanged, mFsType);
     notifyEvent(ResponseCode::VolumeFsUuidChanged, mFsUuid);
-    notifyEvent(ResponseCode::VolumeFsLabelChanged, mFsLabel);
     return res;
 }
 
