@@ -42,6 +42,7 @@ static const int kMoveFailedInternalError = -6;
 
 static const char* kCpPath = "/system/bin/cp";
 static const char* kRmPath = "/system/bin/rm";
+static const char* kShPath = "/system/bin/sh";
 
 static const char* kWakeLock = "MoveTask";
 
@@ -70,17 +71,27 @@ static status_t pushBackContents(const std::string& path, std::vector<std::strin
     }
     bool found = false;
     struct dirent* ent;
+    /*
+     * -f (force): remove without confirmation, no error if it doesn't exist
+     * -R (recursive): remove directory contents
+     */
+    std::string options("/system/bin/rm -f -R");
+
     while ((ent = readdir(dir)) != NULL) {
         if ((!strcmp(ent->d_name, ".")) || (!strcmp(ent->d_name, ".."))) {
             continue;
         }
         if (addWildcard) {
-            cmd.push_back(StringPrintf("%s/%s/*", path.c_str(), ent->d_name));
+            options += StringPrintf(" %s/%s/*", path.c_str(), ent->d_name);
         } else {
             cmd.push_back(StringPrintf("%s/%s", path.c_str(), ent->d_name));
         }
         found = true;
     }
+
+    if (addWildcard && found)
+        cmd.push_back(options);
+
     closedir(dir);
     return found ? OK : -1;
 }
@@ -92,9 +103,8 @@ static status_t execRm(const std::string& path, int startProgress, int stepProgr
     uint64_t startFreeBytes = GetFreeBytes(path);
 
     std::vector<std::string> cmd;
-    cmd.push_back(kRmPath);
-    cmd.push_back("-f"); /* force: remove without confirmation, no error if it doesn't exist */
-    cmd.push_back("-R"); /* recursive: remove directory contents */
+    cmd.push_back(kShPath);
+    cmd.push_back("-c");
     if (pushBackContents(path, cmd, true) != OK) {
         LOG(WARNING) << "No contents in " << path;
         return OK;
